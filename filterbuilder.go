@@ -7,27 +7,6 @@ import (
 	"strings"
 )
 
-// Null indicates the column should evaluate for NULL
-type Null bool
-
-// Value struct
-type Value struct {
-	Src interface{} // Struct field to get value or the value itself
-	Raw bool        // When true, this value is a value set. If false, the value is a struct field.
-}
-
-// Pair struct
-type Pair struct {
-	Column string // Database Column
-	Value  Value  // Struct field to get value or the value itself
-}
-
-// MultiFieldPair struct
-type MultiFieldPair struct {
-	Column string  // Database Column
-	Value  []Value // Struct field to get value
-}
-
 // Filter - the filter struct
 type Filter struct {
 	Data                 interface{}
@@ -77,7 +56,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	// Get Equality filters
 	for _, sv := range fb.Eq {
 
-		v, err = fb.getPairValue(sv.Value)
+		v, err = fb.Value(sv.Value)
 		if err != nil {
 			return sql, args, err
 		}
@@ -102,7 +81,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	// Get  Non-Equality filters
 	for _, sv := range fb.Ne {
 
-		v, err = fb.getPairValue(sv.Value)
+		v, err = fb.Value(sv.Value)
 		if err != nil {
 			return sql, args, err
 		}
@@ -126,7 +105,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	// Get Like filters
 	for _, sv := range fb.Lk {
 
-		v, err = fb.getPairValue(sv.Value)
+		v, err = fb.Value(sv.Value)
 		if err != nil {
 			return sql, args, err
 		}
@@ -244,10 +223,14 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	return sql, args, nil
 }
 
-func (fb *Filter) getPairValue(p Value) (interface{}, error) {
+func (fb *Filter) Value(p Value) (interface{}, error) {
 
 	if p.Raw {
 		return p.Src, nil
+	}
+
+	if fb.Data == nil {
+		return nil, fmt.Errorf("data not set")
 	}
 
 	// get value thru reflect
@@ -297,7 +280,7 @@ func (fb *Filter) getMultiPairValue(p []Value) ([]interface{}, error) {
 	}
 
 	for _, mv := range p {
-		v, err = fb.getPairValue(mv)
+		v, err = fb.Value(mv)
 		if err != nil {
 			return args, err
 		}
