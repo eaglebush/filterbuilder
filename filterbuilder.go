@@ -223,6 +223,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	return sql, args, nil
 }
 
+// Value gets the actual value of the struct field or a raw value that has been set
 func (fb *Filter) Value(p Value) (interface{}, error) {
 
 	if p.Raw {
