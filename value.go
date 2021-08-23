@@ -11,12 +11,12 @@ type Value struct {
 
 // Pair struct
 type Pair struct {
-	Column string // Database Column
+	Column string // Database table column
 	Value  Value  // Struct field to get value or the value itself
 }
 
 // MultiFieldPair struct
 type MultiFieldPair struct {
-	Column string  // Database Column
+	Column string  // Database table column
 	Value  []Value // Struct field to get value
 }
