@@ -82,6 +82,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 			return sql, args, err
 		}
 
+		if v == nil {
+			continue
+		}
+
 		switch v.(type) {
 		case Null:
 			tmp = sv.Column + " IS NULL"
@@ -103,6 +107,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 			return sql, args, err
 		}
 
+		if v == nil {
+			continue
+		}
+
 		switch v.(type) {
 		case Null:
 			tmp = sv.Column + " IS NOT NULL"
@@ -113,7 +121,6 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		}
 
 		sql = append(sql, tmp)
-
 	}
 
 	// Get Like filters
@@ -122,6 +129,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		v, err = fb.getPairValue(sv.Value)
 		if err != nil {
 			return sql, args, err
+		}
+
+		if v == nil {
+			continue
 		}
 
 		fb.ParameterOffset++
@@ -150,6 +161,11 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		cma = ""
 		prms = ""
 		for _, vx := range vs {
+
+			if v == nil {
+				continue
+			}
+
 			fb.ParameterOffset++
 			prms += cma + fb.ParameterPlaceholder + strconv.Itoa(fb.ParameterOffset)
 			cma = ","
@@ -174,6 +190,11 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		cma = ""
 		prms = ""
 		for _, vx := range vs {
+
+			if v == nil {
+				continue
+			}
+
 			fb.ParameterOffset++
 			prms += cma + fb.ParameterPlaceholder + strconv.Itoa(fb.ParameterOffset)
 			cma = ","
@@ -198,6 +219,11 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		cma = ""
 		prms = ""
 		for i, vx := range vs {
+
+			if v == nil {
+				continue
+			}
+
 			fb.ParameterOffset++
 			prms += cma + fb.ParameterPlaceholder + strconv.Itoa(fb.ParameterOffset)
 			cma = " AND "
@@ -243,6 +269,9 @@ func (fb *Filter) getPairValue(p Value) (interface{}, error) {
 	var vx interface{}
 
 	if f.Kind() == reflect.Ptr {
+		if fx := f.Elem(); !fx.IsValid() {
+			return nil, nil
+		}
 		vx = f.Elem().Interface()
 	} else {
 		vx = f.Interface()
