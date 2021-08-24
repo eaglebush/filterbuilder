@@ -38,10 +38,6 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	sql = make([]string, 0)
 	args = make([]interface{}, 0)
 
-	if fb.Data == nil {
-		return sql, args, fmt.Errorf("no data was set")
-	}
-
 	if len(fb.In) == 0 &&
 		len(fb.NotIn) == 0 &&
 		len(fb.Ne) == 0 &&
