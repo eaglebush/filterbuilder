@@ -219,6 +219,48 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	return sql, args, nil
 }
 
+// ValueFor gets the value of the filter by column lookup
+func (fb *Filter) ValueFor(col string) (interface{}, error) {
+
+	for _, v := range fb.Eq {
+		if strings.EqualFold(v.Column, col) {
+			return fb.Value(v.Value)
+		}
+	}
+
+	for _, v := range fb.Ne {
+		if strings.EqualFold(v.Column, col) {
+			return fb.Value(v.Value)
+		}
+	}
+
+	for _, v := range fb.Lk {
+		if strings.EqualFold(v.Column, col) {
+			return fb.Value(v.Value)
+		}
+	}
+
+	for _, v := range fb.In {
+		if strings.EqualFold(v.Column, col) {
+			return fb.getMultiPairValue(v.Value)
+		}
+	}
+
+	for _, v := range fb.NotIn {
+		if strings.EqualFold(v.Column, col) {
+			return fb.getMultiPairValue(v.Value)
+		}
+	}
+
+	for _, v := range fb.Between {
+		if strings.EqualFold(v.Column, col) {
+			return fb.getMultiPairValue(v.Value)
+		}
+	}
+
+	return nil, fmt.Errorf("column not found")
+}
+
 // Value gets the actual value of the struct field or the raw value that has been set
 func (fb *Filter) Value(p Value) (interface{}, error) {
 
