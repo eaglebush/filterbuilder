@@ -262,7 +262,9 @@ func (fb *Filter) ValueFor(col string) (interface{}, error) {
 }
 
 // Weld joins an existing SQL string and its arguments with the results from the Build function
-func (fb *Filter) Weld(sql string, args []interface{}) (string, []interface{}, error) {
+func (fb *Filter) Weld(sql string, args []interface{}, paramoffset int) (string, []interface{}, error) {
+
+	fb.ParameterOffset = paramoffset
 
 	fexp, fargs, err := fb.Build()
 
@@ -320,6 +322,16 @@ func (fb *Filter) Value(p Value) (interface{}, error) {
 	}
 
 	return vx, nil
+}
+
+// Valid checks if any filters were defined
+func (fb *Filter) Valid() bool {
+	return len(fb.Eq) > 0 ||
+		len(fb.Ne) > 0 ||
+		len(fb.Lk) > 0 ||
+		len(fb.In) > 0 ||
+		len(fb.NotIn) > 0 ||
+		len(fb.Between) > 0
 }
 
 func (fb *Filter) getMultiPairValue(p []Value) ([]interface{}, error) {
