@@ -261,6 +261,26 @@ func (fb *Filter) ValueFor(col string) (interface{}, error) {
 	return nil, fmt.Errorf("column not found")
 }
 
+// Weld joins an existing SQL string and its arguments with the results from the Build function
+func (fb *Filter) Weld(sql string, args []interface{}) (string, []interface{}, error) {
+
+	fexp, fargs, err := fb.Build()
+
+	if err != nil {
+		return sql, args, err
+	}
+
+	if len(fexp) > 0 {
+		sql += " WHERE " + strings.Join(fexp, " AND ")
+	}
+
+	if len(fargs) > 0 {
+		args = append(args, fargs...)
+	}
+
+	return sql, args, nil
+}
+
 // Value gets the actual value of the struct field or the raw value that has been set
 func (fb *Filter) Value(p Value) (interface{}, error) {
 
