@@ -1,6 +1,10 @@
 package filterbuilder
 
-import "testing"
+import (
+	"fmt"
+	"reflect"
+	"testing"
+)
 
 func TestFilterByFieldValue(t *testing.T) {
 
@@ -77,5 +81,51 @@ func TestFilterByFieldValue(t *testing.T) {
 
 	t.Log(sql)
 	t.Log(args)
+
+}
+
+func TestOnly(t *testing.T) {
+
+	type Struct struct {
+		Name   *string
+		Age    *int
+		Gender *string
+	}
+
+	s := Struct{
+		Name: new(string),
+	}
+
+	var x interface{}
+
+	vo := reflect.ValueOf(s)
+	for i := 0; i < vo.NumField(); i++ {
+
+		if !vo.Field(i).CanInterface() {
+			continue
+		}
+
+		val := vo.Field(i).Interface()
+
+		switch v := val.(type) {
+		case *string:
+			x = val.(*string)
+			fmt.Println(x)
+		case *int:
+			if v == nil {
+				fmt.Println("nil")
+			} else {
+				x = val.(*int)
+				fmt.Println(x)
+			}
+
+		default:
+			fmt.Println(v)
+		}
+
+		_ = val
+		_ = x
+
+	}
 
 }
