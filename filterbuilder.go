@@ -19,6 +19,7 @@ type Filter struct {
 	Between              []MultiFieldPair // Between column pair
 	ParameterPlaceholder string           // parameter place holder
 	ParameterOffset      int              // the start of parameter count
+	AllowNoFilters       bool             // allow no filter upon building
 }
 
 var (
@@ -52,7 +53,9 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		len(fb.Ne) == 0 &&
 		len(fb.Eq) == 0 &&
 		len(fb.Lk) == 0 &&
-		len(fb.Between) == 0 {
+		len(fb.Between) == 0 &&
+		!fb.AllowNoFilters {
+
 		return sql, args, ErrNoFilterSet
 	}
 
