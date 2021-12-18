@@ -1,6 +1,7 @@
 package filterbuilder
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -19,6 +20,14 @@ type Filter struct {
 	ParameterPlaceholder string           // parameter place holder
 	ParameterOffset      int              // the start of parameter count
 }
+
+var (
+	ErrNoFilterSet      error = errors.New("no filters set")
+	ErrColumnNotFound   error = errors.New("column not found")
+	ErrDataNotSet       error = errors.New("data was not set")
+	ErrInvalidFieldName error = errors.New("invalid field name")
+	ErrDataIsNotStruct  error = errors.New("data is not struct")
+)
 
 // Build the filter query
 func (fb *Filter) Build() ([]string, []interface{}, error) {
@@ -44,7 +53,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		len(fb.Eq) == 0 &&
 		len(fb.Lk) == 0 &&
 		len(fb.Between) == 0 {
-		return sql, args, fmt.Errorf("no filters set")
+		return sql, args, ErrNoFilterSet
 	}
 
 	tmp := ""
@@ -258,7 +267,7 @@ func (fb *Filter) ValueFor(col string) (interface{}, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("column not found")
+	return nil, ErrColumnNotFound
 }
 
 // Weld joins an existing SQL string and its arguments with the results from the Build function
@@ -291,7 +300,7 @@ func (fb *Filter) Value(p Value) (interface{}, error) {
 	}
 
 	if fb.Data == nil {
-		return nil, fmt.Errorf("data not set")
+		return nil, ErrDataNotSet
 	}
 
 	// get value thru reflect
@@ -299,11 +308,11 @@ func (fb *Filter) Value(p Value) (interface{}, error) {
 
 	fld, ok := p.Src.(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid field name")
+		return nil, ErrInvalidFieldName
 	}
 
 	if t.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("data not struct")
+		return nil, ErrDataIsNotStruct
 	}
 
 	f := t.FieldByNameFunc(func(s string) bool {
@@ -347,7 +356,7 @@ func (fb *Filter) getMultiPairValue(p []Value) ([]interface{}, error) {
 	// get value thru reflect
 	t := reflect.TypeOf(fb.Data)
 	if t == nil {
-		return nil, fmt.Errorf("no data was set")
+		return nil, ErrDataNotSet
 	}
 
 	for _, mv := range p {
