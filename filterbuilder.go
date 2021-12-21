@@ -18,6 +18,7 @@ type Filter struct {
 	NotIn                []MultiFieldPair // Not In column pair
 	Between              []MultiFieldPair // Between column pair
 	ParameterPlaceholder string           // parameter place holder
+	ParameterInSequence  bool             // Parameter place holders would be numbered in sequence
 	ParameterOffset      int              // the start of parameter count
 	AllowNoFilters       bool             // allow no filter upon building
 }
@@ -78,7 +79,11 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 			tmp = sv.Column + " IS NULL"
 		default:
 			fb.ParameterOffset++
-			tmp = sv.Column + " = " + fb.ParameterPlaceholder + strconv.Itoa(fb.ParameterOffset)
+			tmp = sv.Column + " = " + fb.ParameterPlaceholder
+			if fb.ParameterInSequence {
+				tmp += strconv.Itoa(fb.ParameterOffset)
+			}
+
 			args = append(args, v)
 		}
 
@@ -103,7 +108,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 			tmp = sv.Column + " IS NOT NULL"
 		default:
 			fb.ParameterOffset++
-			tmp = sv.Column + " <> " + fb.ParameterPlaceholder + strconv.Itoa(fb.ParameterOffset)
+			tmp = sv.Column + " <> " + fb.ParameterPlaceholder
+			if fb.ParameterInSequence {
+				tmp += strconv.Itoa(fb.ParameterOffset)
+			}
 			args = append(args, v)
 		}
 
@@ -124,7 +132,11 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 
 		fb.ParameterOffset++
 
-		tmp = sv.Column + " LIKE " + fb.ParameterPlaceholder + strconv.Itoa(fb.ParameterOffset)
+		tmp = sv.Column + " LIKE " + fb.ParameterPlaceholder
+
+		if fb.ParameterInSequence {
+			tmp += strconv.Itoa(fb.ParameterOffset)
+		}
 
 		sql = append(sql, tmp)
 		args = append(args, v)
@@ -154,7 +166,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 			}
 
 			fb.ParameterOffset++
-			prms += cma + fb.ParameterPlaceholder + strconv.Itoa(fb.ParameterOffset)
+			prms += cma + fb.ParameterPlaceholder
+			if fb.ParameterInSequence {
+				prms += strconv.Itoa(fb.ParameterOffset)
+			}
 			cma = ","
 
 			args = append(args, vx)
@@ -183,7 +198,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 			}
 
 			fb.ParameterOffset++
-			prms += cma + fb.ParameterPlaceholder + strconv.Itoa(fb.ParameterOffset)
+			prms += cma + fb.ParameterPlaceholder
+			if fb.ParameterInSequence {
+				prms += strconv.Itoa(fb.ParameterOffset)
+			}
 			cma = ","
 
 			args = append(args, vx)
@@ -212,7 +230,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 			}
 
 			fb.ParameterOffset++
-			prms += cma + fb.ParameterPlaceholder + strconv.Itoa(fb.ParameterOffset)
+			prms += cma + fb.ParameterPlaceholder
+			if fb.ParameterInSequence {
+				prms += strconv.Itoa(fb.ParameterOffset)
+			}
 			cma = " AND "
 
 			args = append(args, vx)
