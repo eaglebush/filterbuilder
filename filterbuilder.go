@@ -279,12 +279,15 @@ func (fb *Filter) Weld(sql string, args []interface{}, paramoffset int) (string,
 	fb.ParameterOffset = paramoffset
 
 	fexp, fargs, err := fb.Build()
-
 	if err != nil {
 		return sql, args, err
 	}
 
 	if len(fexp) > 0 {
+		// remove trailing space and semi-colon
+		sql = strings.TrimSpace(sql)
+		sql = strings.TrimRight(sql, `;`)
+
 		sql += " WHERE " + strings.Join(fexp, " AND ")
 	}
 
