@@ -6,6 +6,26 @@ import (
 	"testing"
 )
 
+func TestNew(t *testing.T) {
+
+	fb := NewFilter(
+		[]Pair{
+			{Column: "first_name", Value: Value{Src: "Zaldy", Raw: true}},
+			{Column: "last_name", Value: Value{Src: "Baguinon", Raw: true}},
+		}, true, "@p")
+
+	fb.Ne = append(fb.Ne, Pair{Column: "first_name", Value: Value{Src: "James", Raw: true}})
+	fb.Ne = append(fb.Ne, Pair{Column: "last_name", Value: Value{Src: "Lumibao", Raw: true}})
+
+	sql, args, err := fb.Build()
+	if err != nil {
+		t.Fail()
+	}
+
+	t.Log(sql)
+	t.Log(args)
+}
+
 func TestFilterByFieldValue(t *testing.T) {
 
 	type simpleData struct {

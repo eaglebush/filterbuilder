@@ -31,6 +31,24 @@ var (
 	ErrDataIsNotStruct  error = errors.New("data is not struct")
 )
 
+// NewFulter creates a new Filter object
+func NewFilter(eq []Pair, paramInSequence bool, paramPlaceHolder string) *Filter {
+
+	if paramPlaceHolder == "" {
+		if paramInSequence {
+			paramPlaceHolder = "@p"
+		} else {
+			paramPlaceHolder = "?"
+		}
+	}
+
+	return &Filter{
+		Eq:                   eq,
+		ParameterInSequence:  paramInSequence,
+		ParameterPlaceholder: paramPlaceHolder,
+	}
+}
+
 // Build the filter query
 func (fb *Filter) Build() ([]string, []interface{}, error) {
 
@@ -43,7 +61,11 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	)
 
 	if fb.ParameterPlaceholder == "" {
-		fb.ParameterPlaceholder = "@p"
+		if fb.ParameterInSequence {
+			fb.ParameterPlaceholder = "@p"
+		} else {
+			fb.ParameterPlaceholder = "?"
+		}
 	}
 
 	sql = make([]string, 0)
