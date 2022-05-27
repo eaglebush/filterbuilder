@@ -6,6 +6,10 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
+
+	ssd "github.com/shopspring/decimal"
+	"golang.org/x/exp/constraints"
 )
 
 // Filter - the filter struct
@@ -24,12 +28,17 @@ type Filter struct {
 }
 
 var (
-	ErrNoFilterSet      error = errors.New("no filters set")
-	ErrColumnNotFound   error = errors.New("column not found")
-	ErrDataNotSet       error = errors.New("data was not set")
-	ErrInvalidFieldName error = errors.New("invalid field name")
-	ErrDataIsNotStruct  error = errors.New("data is not struct")
+	ErrNoFilterSet           error = errors.New("no filters set")
+	ErrColumnNotFound        error = errors.New("column not found")
+	ErrDataNotSet            error = errors.New("data was not set")
+	ErrInvalidFieldName      error = errors.New("invalid field name")
+	ErrDataIsNotStruct       error = errors.New("data is not struct")
+	ErrDataAssertionMismatch error = errors.New("data assertion mismatch")
 )
+
+type FieldTypeConstraint interface {
+	constraints.Ordered | time.Time | ssd.Decimal
+}
 
 // NewFulter creates a new Filter object
 func NewFilter(eq []Pair, paramInSequence bool, paramPlaceHolder string) *Filter {
@@ -314,6 +323,22 @@ func (fb *Filter) ValueFor(col string) (interface{}, error) {
 	}
 
 	return nil, ErrColumnNotFound
+}
+
+// ValueFor gets the value of the filter by column lookup that automatically 
+func ValueFor[T FieldTypeConstraint](fb Filter, col string) (T, error) {
+
+	ifc, err := fb.ValueFor(col)
+	if err != nil {
+		return *new(T), err
+	}
+
+	val, ok := ifc.(T)
+	if !ok {
+		return *new(T), ErrDataAssertionMismatch
+	}
+
+	return val, err
 }
 
 // Weld joins an existing SQL string and its arguments with the results from the Build function

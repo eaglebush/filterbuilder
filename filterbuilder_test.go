@@ -149,3 +149,28 @@ func TestOnly(t *testing.T) {
 	}
 
 }
+
+func TestValueFor(t *testing.T) {
+
+	fb := NewFilter(
+		[]Pair{
+			{Column: "first_name", Value: Value{Src: "Zaldy", Raw: true}},
+			{Column: "last_name", Value: Value{Src: "Baguinon", Raw: true}},
+			{Column: "age", Value: Value{Src: 47, Raw: true}},
+		}, true, "@p")
+
+	fb.Ne = append(fb.Ne, Pair{Column: "first_name", Value: Value{Src: "James", Raw: true}})
+	fb.Ne = append(fb.Ne, Pair{Column: "last_name", Value: Value{Src: "Lumibao", Raw: true}})
+
+	res1, err := ValueFor[string](*fb, "last_name")
+	if err != nil {
+		t.Log(err.Error())
+	}
+	t.Log(res1)
+
+	res2, err := ValueFor[int](*fb, "age")
+	if err != nil {
+		t.Log(err.Error())
+	}
+	t.Log(res2)
+}
