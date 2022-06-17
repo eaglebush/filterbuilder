@@ -37,7 +37,7 @@ var (
 )
 
 type FieldTypeConstraint interface {
-	constraints.Ordered | time.Time | ssd.Decimal
+	constraints.Ordered | time.Time | ssd.Decimal | bool
 }
 
 // NewFulter creates a new Filter object
@@ -325,7 +325,7 @@ func (fb *Filter) ValueFor(col string) (interface{}, error) {
 	return nil, ErrColumnNotFound
 }
 
-// ValueFor gets the value of the filter by column lookup that automatically 
+// ValueFor gets the value of the filter by column lookup that automatically
 func ValueFor[T FieldTypeConstraint](fb Filter, col string) (T, error) {
 
 	ifc, err := fb.ValueFor(col)
