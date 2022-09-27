@@ -40,7 +40,7 @@ type FieldTypeConstraint interface {
 	constraints.Ordered | time.Time | ssd.Decimal | bool
 }
 
-// NewFulter creates a new Filter object
+// NewFilter creates a new Filter object
 func NewFilter(eq []Pair, paramInSequence bool, paramPlaceHolder string) *Filter {
 
 	if paramPlaceHolder == "" {
@@ -56,6 +56,15 @@ func NewFilter(eq []Pair, paramInSequence bool, paramPlaceHolder string) *Filter
 		ParameterInSequence:  paramInSequence,
 		ParameterPlaceholder: paramPlaceHolder,
 	}
+}
+
+// BuildFunc is a builder compatible with QueryBuilder FilterFunc
+func (fb *Filter) BuildFunc(poff int, pchar string, pseq bool) ([]string, []interface{}) {
+	fb.ParameterOffset = poff
+	fb.ParameterPlaceholder = pchar
+	fb.ParameterInSequence = pseq
+	qry, args, _ := fb.Build()
+	return qry, args
 }
 
 // Build the filter query

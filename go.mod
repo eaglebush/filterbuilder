@@ -1,6 +1,6 @@
 module github.com/eaglebush/filterbuilder
 
-go 1.18
+go 1.19
 
 require (
 	github.com/shopspring/decimal v1.3.1
