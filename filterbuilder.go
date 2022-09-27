@@ -58,6 +58,34 @@ func NewFilter(eq []Pair, paramInSequence bool, paramPlaceHolder string) *Filter
 	}
 }
 
+// RawPair simplifies raw pair
+func RawPair(column string, value interface{}) Pair {
+	return Pair{
+		Column: column,
+		Value: Value{
+			Src: value,
+			Raw: true,
+		},
+	}
+}
+
+// RawMultiPair simplifies raw multi-pair
+func RawMultiPair(column string, value ...interface{}) MultiFieldPair {
+
+	v := make([]Value, 0, len(value))
+	for _, a := range value {
+		v = append(v, Value{
+			Raw: true,
+			Src: a,
+		})
+	}
+
+	return MultiFieldPair{
+		Column: column,
+		Value:  v,
+	}
+}
+
 // BuildFunc is a builder compatible with QueryBuilder FilterFunc
 func (fb *Filter) BuildFunc(poff int, pchar string, pseq bool) ([]string, []interface{}) {
 	fb.ParameterOffset = poff
