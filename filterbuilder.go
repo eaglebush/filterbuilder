@@ -14,7 +14,7 @@ import (
 
 // Filter - the filter struct
 type Filter struct {
-	Data                 interface{}
+	Data                 any
 	Eq                   []Pair           // Equality pair
 	Ne                   []Pair           // Not equality pair
 	Lk                   []Pair           // Like pair
@@ -58,7 +58,8 @@ func NewFilter(eq []Pair, paramInSequence bool, paramPlaceHolder string) *Filter
 	}
 }
 
-// RawPair simplifies raw pair
+// RawPair simplifies raw pair.
+// Pairs reads the value argument raw.
 func RawPair(column string, value interface{}) Pair {
 	return Pair{
 		Column: column,
@@ -69,13 +70,42 @@ func RawPair(column string, value interface{}) Pair {
 	}
 }
 
-// RawMultiPair simplifies raw multi-pair
+// RawMultiPair simplifies raw multi-pair.
+// Pairs reads the value argument raw.
 func RawMultiPair(column string, value ...interface{}) MultiFieldPair {
 
 	v := make([]Value, 0, len(value))
 	for _, a := range value {
 		v = append(v, Value{
 			Raw: true,
+			Src: a,
+		})
+	}
+
+	return MultiFieldPair{
+		Column: column,
+		Value:  v,
+	}
+}
+
+// DataPair simplifies data pair.
+// Pairs reads the Data field values via fieldName argument.
+func DataPair(column string, fieldName string) Pair {
+	return Pair{
+		Column: column,
+		Value: Value{
+			Src: fieldName,
+		},
+	}
+}
+
+// DataMultiPair simplifies data multi-pair.
+// Pairs reads the Data field values via fieldName argument.
+func DataMultiPair(column string, fieldName ...string) MultiFieldPair {
+
+	v := make([]Value, 0, len(fieldName))
+	for _, a := range fieldName {
+		v = append(v, Value{
 			Src: a,
 		})
 	}
