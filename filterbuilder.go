@@ -393,7 +393,7 @@ func (fb *Filter) ValueFor(col string) (interface{}, error) {
 }
 
 // ValueFor gets the value of the filter by column lookup that automatically
-func ValueFor[T FieldTypeConstraint](fb Filter, col string) (T, error) {
+func ValueFor[T FieldTypeConstraint](fb *Filter, col string) (T, error) {
 
 	ifc, err := fb.ValueFor(col)
 	if err != nil {

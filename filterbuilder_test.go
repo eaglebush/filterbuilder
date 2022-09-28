@@ -162,13 +162,13 @@ func TestValueFor(t *testing.T) {
 	fb.Ne = append(fb.Ne, Pair{Column: "first_name", Value: Value{Src: "James", Raw: true}})
 	fb.Ne = append(fb.Ne, Pair{Column: "last_name", Value: Value{Src: "Lumibao", Raw: true}})
 
-	res1, err := ValueFor[string](*fb, "last_name")
+	res1, err := ValueFor[string](fb, "last_name")
 	if err != nil {
 		t.Log(err.Error())
 	}
 	t.Log(res1)
 
-	res2, err := ValueFor[int](*fb, "age")
+	res2, err := ValueFor[int](fb, "age")
 	if err != nil {
 		t.Log(err.Error())
 	}
