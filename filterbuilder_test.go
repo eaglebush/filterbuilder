@@ -174,3 +174,27 @@ func TestValueFor(t *testing.T) {
 	}
 	t.Log(res2)
 }
+
+func TestValueForPtr(t *testing.T) {
+
+	age := 47
+
+	fb := NewFilter(
+		[]Pair{
+			{Column: "first_name", Value: Value{Src: "Zaldy", Raw: true}},
+			{Column: "last_name", Value: Value{Src: "Baguinon", Raw: true}},
+			{Column: "age", Value: Value{Src: &age, Raw: true}},
+		}, true, "@p")
+
+	res1, err := ValueFor[string](fb, "last_name")
+	if err != nil {
+		t.Log(err.Error())
+	}
+	t.Log(res1)
+
+	res2, err := ValueFor[int](fb, "age")
+	if err != nil {
+		t.Log(err.Error())
+	}
+	t.Log(res2)
+}

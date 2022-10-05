@@ -34,6 +34,7 @@ var (
 	ErrInvalidFieldName      error = errors.New("invalid field name")
 	ErrDataIsNotStruct       error = errors.New("data is not struct")
 	ErrDataAssertionMismatch error = errors.New("data assertion mismatch")
+	ErrTypeReflectionInvalid error = errors.New("type reflection invalid")
 )
 
 type FieldTypeConstraint interface {
@@ -400,7 +401,19 @@ func ValueFor[T FieldTypeConstraint](fb *Filter, col string) (T, error) {
 		return *new(T), err
 	}
 
-	val, ok := ifc.(T)
+	// get value thru reflect
+	var vx interface{}
+	t := reflect.ValueOf(ifc)
+	if t.Kind() == reflect.Ptr {
+		if fx := t.Elem(); !fx.IsValid() {
+			return *new(T), ErrTypeReflectionInvalid
+		}
+		vx = t.Elem().Interface()
+	} else {
+		vx = t.Interface()
+	}
+
+	val, ok := vx.(T)
 	if !ok {
 		return *new(T), ErrDataAssertionMismatch
 	}
