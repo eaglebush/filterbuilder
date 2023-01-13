@@ -26,6 +26,27 @@ func TestNew(t *testing.T) {
 	t.Log(args)
 }
 
+func TestNilString(t *testing.T) {
+
+	var nilStr *string
+	name := "Zaldy"
+
+	fb := NewFilter(
+		[]Pair{
+			{Column: "first_name", Value: Value{Src: name, Raw: true}},
+			{Column: "last_name", Value: Value{Src: "Baguinon", Raw: true}},
+			{Column: "nil_str", Value: Value{Src: nilStr, Raw: true}},
+		}, true, "@p")
+
+	sql, args, err := fb.Build()
+	if err != nil {
+		t.Fail()
+	}
+
+	t.Log(sql)
+	t.Log(args)
+}
+
 func TestFilterByFieldValue(t *testing.T) {
 
 	type simpleData struct {

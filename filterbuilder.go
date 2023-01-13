@@ -450,6 +450,20 @@ func (fb *Filter) Weld(sql string, args []interface{}, paramoffset int) (string,
 func (fb *Filter) Value(p Value) (interface{}, error) {
 
 	if p.Raw {
+		if p.Src == nil {
+			return Null(true), nil
+		}
+
+		rv := reflect.ValueOf(p.Src)
+		if rv.Kind() != reflect.Ptr {
+			return p.Src, nil
+		}
+
+		vv := rv.Elem()
+		if !vv.IsValid() {
+			return Null(true), nil
+		}
+
 		return p.Src, nil
 	}
 
