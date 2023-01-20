@@ -178,6 +178,7 @@ func TestValueFor(t *testing.T) {
 			{Column: "first_name", Value: Value{Src: "Zaldy", Raw: true}},
 			{Column: "last_name", Value: Value{Src: "Baguinon", Raw: true}},
 			{Column: "age", Value: Value{Src: 47, Raw: true}},
+			{Column: "title", Value: Value{Src: nil, Raw: true}},
 		}, true, "@p")
 
 	fb.Ne = append(fb.Ne, Pair{Column: "first_name", Value: Value{Src: "James", Raw: true}})
@@ -194,6 +195,12 @@ func TestValueFor(t *testing.T) {
 		t.Log(err.Error())
 	}
 	t.Log(res2)
+
+	res3, err := ValueFor[*string](fb, "title")
+	if err != nil {
+		t.Log(err.Error())
+	}
+	t.Log(res3)
 }
 
 func TestValueForPtr(t *testing.T) {
