@@ -196,7 +196,7 @@ func TestValueFor(t *testing.T) {
 	}
 	t.Log(res2)
 
-	res3, err := ValueFor[*string](fb, "title")
+	res3, err := ValueFor[string](fb, "title")
 	if err != nil {
 		t.Log(err.Error())
 	}
