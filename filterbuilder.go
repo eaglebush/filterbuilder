@@ -14,17 +14,17 @@ import (
 
 // Filter - the filter struct
 type Filter struct {
-	Data                 any
-	Eq                   []Pair           // Equality pair
-	Ne                   []Pair           // Not equality pair
-	Lk                   []Pair           // Like pair
-	In                   []MultiFieldPair // In column pair.
-	NotIn                []MultiFieldPair // Not In column pair
-	Between              []MultiFieldPair // Between column pair
-	ParameterPlaceholder string           // parameter place holder
-	ParameterInSequence  bool             // Parameter place holders would be numbered in sequence
-	ParameterOffset      int              // the start of parameter count
-	AllowNoFilters       bool             // allow no filter upon building
+	Data           any
+	Eq             []Pair           // Equality pair
+	Ne             []Pair           // Not equality pair
+	Lk             []Pair           // Like pair
+	In             []MultiFieldPair // In column pair.
+	NotIn          []MultiFieldPair // Not In column pair
+	Between        []MultiFieldPair // Between column pair
+	Placeholder    string           // Parameter place holder
+	InSequence     bool             // Parameter place holders would be numbered in sequence
+	Offset         int              // Sets the start of parameter number
+	AllowNoFilters bool             // Allow no filter upon building
 }
 
 var (
@@ -51,9 +51,9 @@ func NewFilter(eq []Pair, paramInSequence bool, paramPlaceHolder string) *Filter
 		}
 	}
 	return &Filter{
-		Eq:                   eq,
-		ParameterInSequence:  paramInSequence,
-		ParameterPlaceholder: paramPlaceHolder,
+		Eq:          eq,
+		InSequence:  paramInSequence,
+		Placeholder: paramPlaceHolder,
 	}
 }
 
@@ -111,11 +111,21 @@ func DataMultiPair(column string, fieldName ...string) MultiFieldPair {
 	}
 }
 
-// BuildFunc is a builder compatible with QueryBuilder FilterFunc
+// NewPairs simplify initialization of Pairs
+func NewPairs(pairs ...Pair) []Pair {
+	return pairs
+}
+
+// NewMultiPairs simplify initialization of multi-field pairs
+func NewMultiPairs(pairs ...MultiFieldPair) []MultiFieldPair {
+	return pairs
+}
+
+// BuildFunc is a builder compatible with QueryBuilder's FilterFunc
 func (fb *Filter) BuildFunc(poff int, pchar string, pseq bool) ([]string, []interface{}) {
-	fb.ParameterOffset = poff
-	fb.ParameterPlaceholder = pchar
-	fb.ParameterInSequence = pseq
+	fb.Offset = poff
+	fb.Placeholder = pchar
+	fb.InSequence = pseq
 	qry, args, _ := fb.Build()
 	return qry, args
 }
@@ -131,11 +141,11 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		vs   []interface{}
 	)
 
-	if fb.ParameterPlaceholder == "" {
-		if fb.ParameterInSequence {
-			fb.ParameterPlaceholder = "@p"
+	if fb.Placeholder == "" {
+		if fb.InSequence {
+			fb.Placeholder = "@p"
 		} else {
-			fb.ParameterPlaceholder = "?"
+			fb.Placeholder = "?"
 		}
 	}
 
@@ -167,10 +177,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		case Null:
 			tmp = sv.Column + " IS NULL"
 		default:
-			fb.ParameterOffset++
-			tmp = sv.Column + " = " + fb.ParameterPlaceholder
-			if fb.ParameterInSequence {
-				tmp += strconv.Itoa(fb.ParameterOffset)
+			fb.Offset++
+			tmp = sv.Column + " = " + fb.Placeholder
+			if fb.InSequence {
+				tmp += strconv.Itoa(fb.Offset)
 			}
 			args = append(args, v)
 		}
@@ -190,10 +200,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		case Null:
 			tmp = sv.Column + " IS NOT NULL"
 		default:
-			fb.ParameterOffset++
-			tmp = sv.Column + " <> " + fb.ParameterPlaceholder
-			if fb.ParameterInSequence {
-				tmp += strconv.Itoa(fb.ParameterOffset)
+			fb.Offset++
+			tmp = sv.Column + " <> " + fb.Placeholder
+			if fb.InSequence {
+				tmp += strconv.Itoa(fb.Offset)
 			}
 			args = append(args, v)
 		}
@@ -209,10 +219,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		if v == nil {
 			continue
 		}
-		fb.ParameterOffset++
-		tmp = sv.Column + " LIKE " + fb.ParameterPlaceholder
-		if fb.ParameterInSequence {
-			tmp += strconv.Itoa(fb.ParameterOffset)
+		fb.Offset++
+		tmp = sv.Column + " LIKE " + fb.Placeholder
+		if fb.InSequence {
+			tmp += strconv.Itoa(fb.Offset)
 		}
 		sql = append(sql, tmp)
 		args = append(args, v)
@@ -236,10 +246,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 			if v == nil {
 				continue
 			}
-			fb.ParameterOffset++
-			prms += cma + fb.ParameterPlaceholder
-			if fb.ParameterInSequence {
-				prms += strconv.Itoa(fb.ParameterOffset)
+			fb.Offset++
+			prms += cma + fb.Placeholder
+			if fb.InSequence {
+				prms += strconv.Itoa(fb.Offset)
 			}
 			cma = ","
 			args = append(args, vx)
@@ -261,10 +271,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 			if v == nil {
 				continue
 			}
-			fb.ParameterOffset++
-			prms += cma + fb.ParameterPlaceholder
-			if fb.ParameterInSequence {
-				prms += strconv.Itoa(fb.ParameterOffset)
+			fb.Offset++
+			prms += cma + fb.Placeholder
+			if fb.InSequence {
+				prms += strconv.Itoa(fb.Offset)
 			}
 			cma = ","
 			args = append(args, vx)
@@ -287,10 +297,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 			if v == nil {
 				continue
 			}
-			fb.ParameterOffset++
-			prms += cma + fb.ParameterPlaceholder
-			if fb.ParameterInSequence {
-				prms += strconv.Itoa(fb.ParameterOffset)
+			fb.Offset++
+			prms += cma + fb.Placeholder
+			if fb.InSequence {
+				prms += strconv.Itoa(fb.Offset)
 			}
 			cma = " AND "
 			args = append(args, vx)
@@ -367,7 +377,7 @@ func ValueFor[T FieldTypeConstraint](fb *Filter, col string) (T, error) {
 
 // Weld joins an existing SQL string and its arguments with the results from the Build function
 func (fb *Filter) Weld(sql string, args []interface{}, paramoffset int) (string, []interface{}, error) {
-	fb.ParameterOffset = paramoffset
+	fb.Offset = paramoffset
 	fexp, fargs, err := fb.Build()
 	if err != nil {
 		return sql, args, err
