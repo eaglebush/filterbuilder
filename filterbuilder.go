@@ -12,21 +12,6 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// Filter - the filter struct
-type Filter struct {
-	Data           any
-	Eq             []Pair           // Equality pair
-	Ne             []Pair           // Not equality pair
-	Lk             []Pair           // Like pair
-	In             []MultiFieldPair // In column pair.
-	NotIn          []MultiFieldPair // Not In column pair
-	Between        []MultiFieldPair // Between column pair
-	Placeholder    string           // Parameter place holder
-	InSequence     bool             // Parameter place holders would be numbered in sequence
-	Offset         int              // Sets the start of parameter number
-	AllowNoFilters bool             // Allow no filter upon building
-}
-
 var (
 	ErrNoFilterSet           error = errors.New("no filters set")
 	ErrColumnNotFound        error = errors.New("column not found")
