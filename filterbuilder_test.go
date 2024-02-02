@@ -26,6 +26,25 @@ func TestNew(t *testing.T) {
 	t.Log(args)
 }
 
+func TestSetPairs(t *testing.T) {
+	f := Filter{
+		Placeholder: "?",
+	}
+	SetPair(&f.Eq, "first_name", Value{
+		Src: "Bob",
+		Raw: true,
+	})
+	SetPair(&f.Eq, "last_name", Value{
+		Src: "Odenkirk",
+		Raw: true,
+	})
+	SetPair(&f.Eq, "last_name", Value{
+		Src: "Odenkirk1",
+		Raw: true,
+	})
+	t.Logf("%v", f)
+}
+
 func TestNilString(t *testing.T) {
 
 	var nilStr *string

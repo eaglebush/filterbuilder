@@ -106,6 +106,64 @@ func NewMultiPairs(pairs ...MultiFieldPair) []MultiFieldPair {
 	return pairs
 }
 
+// SetPair sets a pair array with the specified column and value
+//
+// If the column does not exist, it will create one
+func SetPair(selector *[]Pair, column string, value Value) {
+	if selector == nil {
+		*selector = []Pair{}
+	}
+	found := false
+	if len(*selector) > 0 {
+		slctr := *selector
+		for i, cv := range *selector {
+			if strings.EqualFold(cv.Column, column) {
+				cv.Value = value
+				slctr[i] = cv
+				*selector = slctr
+				return
+			}
+		}
+	}
+	if !found {
+		*selector = append(*selector,
+			Pair{
+				Column: column,
+				Value:  value,
+			},
+		)
+	}
+}
+
+// SetMultiPair sets a multi-pair array with the specified column and value
+//
+// If the column does not exist, it will create one
+func SetMultiPair(selector *[]MultiFieldPair, column string, value []Value) {
+	if selector == nil {
+		*selector = []MultiFieldPair{}
+	}
+	found := false
+	if len(*selector) > 0 {
+		slctr := *selector
+		for i, cv := range *selector {
+			if strings.EqualFold(cv.Column, column) {
+				cv.Value = value
+				slctr[i] = cv
+				*selector = slctr
+				return
+			}
+		}
+	}
+	if !found {
+		*selector = append(*selector,
+			MultiFieldPair{
+				Column: column,
+				Value:  value,
+			},
+		)
+	}
+}
+
 // BuildFunc is a builder compatible with QueryBuilder's FilterFunc
 func (fb *Filter) BuildFunc(poff int, pchar string, pseq bool) ([]string, []interface{}) {
 	fb.Offset = poff
