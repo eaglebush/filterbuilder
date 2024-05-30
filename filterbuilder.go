@@ -111,7 +111,7 @@ func NewMultiPairs(pairs ...MultiFieldPair) []MultiFieldPair {
 // If the column does not exist, it will create one
 func SetPair(selector *[]Pair, column string, value Value) {
 	if selector == nil {
-		*selector = []Pair{}
+		selector = &[]Pair{}
 	}
 	found := false
 	if len(*selector) > 0 {
@@ -140,7 +140,7 @@ func SetPair(selector *[]Pair, column string, value Value) {
 // If the column does not exist, it will create one
 func SetMultiPair(selector *[]MultiFieldPair, column string, value []Value) {
 	if selector == nil {
-		*selector = []MultiFieldPair{}
+		selector = &[]MultiFieldPair{}
 	}
 	found := false
 	if len(*selector) > 0 {
@@ -498,11 +498,6 @@ func (fb *Filter) getMultiPairValue(p []Value) ([]interface{}, error) {
 		v    interface{}
 	)
 	args = make([]interface{}, 0)
-	// get value thru reflect
-	t := reflect.TypeOf(fb.Data)
-	if t == nil {
-		return nil, ErrDataNotSet
-	}
 	for _, mv := range p {
 		v, err = fb.Value(mv)
 		if err != nil {
