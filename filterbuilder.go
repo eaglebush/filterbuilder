@@ -359,7 +359,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	return sql, args, nil
 }
 
-// ValueFor gets the value of the filter by column lookup
+// ValueFor gets the value of the filter instance by column lookup
 func (fb *Filter) ValueFor(col string) (interface{}, error) {
 	for _, v := range fb.Eq {
 		if strings.EqualFold(v.Column, col) {
@@ -394,7 +394,7 @@ func (fb *Filter) ValueFor(col string) (interface{}, error) {
 	return nil, ErrColumnNotFound
 }
 
-// ValueFor gets the value of the filter by column lookup that automatically
+// ValueFor is a static way to get the value of the filter by column lookup
 func ValueFor[T FieldTypeConstraint](fb *Filter, col string) (T, error) {
 	ifc, err := fb.ValueFor(col)
 	if err != nil {
