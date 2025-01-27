@@ -286,7 +286,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		cma = ""
 		prms = ""
 		for _, vx := range vs {
-			if v == nil {
+			if vx == nil {
 				continue
 			}
 			fb.Offset++
@@ -311,7 +311,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		cma = ""
 		prms = ""
 		for _, vx := range vs {
-			if v == nil {
+			if vx == nil {
 				continue
 			}
 			fb.Offset++
@@ -337,7 +337,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		cma = ""
 		prms = ""
 		for i, vx := range vs {
-			if v == nil {
+			if vx == nil {
 				continue
 			}
 			fb.Offset++
