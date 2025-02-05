@@ -13,13 +13,14 @@ import (
 )
 
 var (
-	ErrNoFilterSet           error = errors.New("no filters set")
-	ErrColumnNotFound        error = errors.New("column not found")
-	ErrDataNotSet            error = errors.New("data was not set")
-	ErrInvalidFieldName      error = errors.New("invalid field name")
-	ErrDataIsNotStruct       error = errors.New("data is not struct")
-	ErrDataAssertionMismatch error = errors.New("data assertion mismatch")
-	ErrTypeReflectionInvalid error = errors.New("type reflection invalid")
+	ErrNoFilterSet                 error = errors.New("no filters set")
+	ErrColumnNotFound              error = errors.New("column not found")
+	ErrDataNotSet                  error = errors.New("data was not set")
+	ErrInvalidFieldName            error = errors.New("invalid field name")
+	ErrDataIsNotStruct             error = errors.New("data is not struct")
+	ErrDataAssertionMismatch       error = errors.New("data assertion mismatch")
+	ErrTypeReflectionInvalid       error = errors.New("type reflection invalid")
+	ErrPairTypeMustHaveMoreThanTwo error = errors.New("pair type must have more than two")
 )
 
 type FieldTypeConstraint interface {
@@ -199,10 +200,15 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		len(fb.NotIn) == 0 &&
 		len(fb.Ne) == 0 &&
 		len(fb.Eq) == 0 &&
+		len(fb.Or) == 0 &&
 		len(fb.Lk) == 0 &&
 		len(fb.Between) == 0 &&
 		!fb.AllowNoFilters {
 		return sql, args, ErrNoFilterSet
+	}
+
+	if len(fb.Or) > 0 && len(fb.Or) < 2 {
+		return sql, args, ErrPairTypeMustHaveMoreThanTwo
 	}
 
 	tmp := ""
@@ -230,7 +236,35 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		sql = append(sql, tmp)
 	}
 
-	// Get  Non-Equality filters
+	// Get Or filters
+	tmps := []string{}
+	for _, sv := range fb.Or {
+		v, err = fb.Value(sv.Value)
+		if err != nil {
+			return sql, args, err
+		}
+		if v == nil {
+			continue
+		}
+		switch v.(type) {
+		case Null:
+			tmp = sv.Column + " IS NULL"
+		default:
+			fb.Offset++
+			tmp = sv.Column + " = " + fb.Placeholder
+			if fb.InSequence {
+				tmp += strconv.Itoa(fb.Offset)
+			}
+			args = append(args, v)
+		}
+		tmps = append(tmps, tmp)
+	}
+	if len(tmps) > 0 {
+		tmp = "(" + strings.Join(tmps, " OR ") + ")"
+		sql = append(sql, tmp)
+	}
+
+	// Get Non-Equality filters
 	for _, sv := range fb.Ne {
 		v, err = fb.Value(sv.Value)
 		if err != nil {
@@ -366,6 +400,11 @@ func (fb *Filter) ValueFor(col string) (interface{}, error) {
 			return fb.Value(v.Value)
 		}
 	}
+	for _, v := range fb.Or {
+		if strings.EqualFold(v.Column, col) {
+			return fb.Value(v.Value)
+		}
+	}
 	for _, v := range fb.Ne {
 		if strings.EqualFold(v.Column, col) {
 			return fb.Value(v.Value)
@@ -484,6 +523,7 @@ func (fb *Filter) Value(p Value) (interface{}, error) {
 // Valid checks if any filters were defined
 func (fb *Filter) Valid() bool {
 	return len(fb.Eq) > 0 ||
+		len(fb.Or) > 0 ||
 		len(fb.Ne) > 0 ||
 		len(fb.Lk) > 0 ||
 		len(fb.In) > 0 ||

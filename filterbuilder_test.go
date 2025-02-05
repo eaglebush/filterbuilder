@@ -26,6 +26,30 @@ func TestNew(t *testing.T) {
 	t.Log(args)
 }
 
+func TestOr(t *testing.T) {
+
+	fb := NewFilter(
+		[]Pair{
+			{Column: "first_name", Value: Value{Src: "Zaldy", Raw: true}},
+			{Column: "last_name", Value: Value{Src: "Baguinon", Raw: true}},
+		}, true, "@p")
+
+	fb.Ne = append(fb.Ne, Pair{Column: "first_name", Value: Value{Src: "James", Raw: true}})
+	fb.Ne = append(fb.Ne, Pair{Column: "last_name", Value: Value{Src: "Lumibao", Raw: true}})
+	fb.Or = append(fb.Or, Pair{Column: "[nick_name]", Value: Value{Src: "James", Raw: true}})
+	fb.Or = append(fb.Or, Pair{Column: "[maiden_name]", Value: Value{Src: "Garcia", Raw: true}})
+	fb.Or = append(fb.Or, Pair{Column: "''", Value: Value{Src: "222", Raw: true}})
+
+	sql, args, err := fb.Build()
+	if err != nil {
+		t.Logf("Error: %s", err)
+		t.Fail()
+	}
+
+	t.Log(sql)
+	t.Log(args)
+}
+
 func TestSetPairs(t *testing.T) {
 	f := Filter{
 		Placeholder: "?",
