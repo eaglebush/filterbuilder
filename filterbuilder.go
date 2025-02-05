@@ -207,8 +207,10 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 		return sql, args, ErrNoFilterSet
 	}
 
-	if len(fb.Or) > 0 && len(fb.Or) < 2 {
-		return sql, args, ErrPairTypeMustHaveMoreThanTwo
+	for _, ors := range fb.Or {
+		if len(ors) > 0 && len(ors) < 2 {
+			return sql, args, ErrPairTypeMustHaveMoreThanTwo
+		}
 	}
 
 	tmp := ""
@@ -237,31 +239,33 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	}
 
 	// Get Or filters
-	tmps := []string{}
-	for _, sv := range fb.Or {
-		v, err = fb.Value(sv.Value)
-		if err != nil {
-			return sql, args, err
-		}
-		if v == nil {
-			continue
-		}
-		switch v.(type) {
-		case Null:
-			tmp = sv.Column + " IS NULL"
-		default:
-			fb.Offset++
-			tmp = sv.Column + " = " + fb.Placeholder
-			if fb.InSequence {
-				tmp += strconv.Itoa(fb.Offset)
+	for _, ors := range fb.Or {
+		tmps := []string{}
+		for _, sv := range ors {
+			v, err = fb.Value(sv.Value)
+			if err != nil {
+				return sql, args, err
 			}
-			args = append(args, v)
+			if v == nil {
+				continue
+			}
+			switch v.(type) {
+			case Null:
+				tmp = sv.Column + " IS NULL"
+			default:
+				fb.Offset++
+				tmp = sv.Column + " = " + fb.Placeholder
+				if fb.InSequence {
+					tmp += strconv.Itoa(fb.Offset)
+				}
+				args = append(args, v)
+			}
+			tmps = append(tmps, tmp)
 		}
-		tmps = append(tmps, tmp)
-	}
-	if len(tmps) > 0 {
-		tmp = "(" + strings.Join(tmps, " OR ") + ")"
-		sql = append(sql, tmp)
+		if len(tmps) > 0 {
+			tmp = "(" + strings.Join(tmps, " OR ") + ")"
+			sql = append(sql, tmp)
+		}
 	}
 
 	// Get Non-Equality filters
@@ -400,9 +404,11 @@ func (fb *Filter) ValueFor(col string) (interface{}, error) {
 			return fb.Value(v.Value)
 		}
 	}
-	for _, v := range fb.Or {
-		if strings.EqualFold(v.Column, col) {
-			return fb.Value(v.Value)
+	for _, vfs := range fb.Or {
+		for _, v := range vfs {
+			if strings.EqualFold(v.Column, col) {
+				return fb.Value(v.Value)
+			}
 		}
 	}
 	for _, v := range fb.Ne {

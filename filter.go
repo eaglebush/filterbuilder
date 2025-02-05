@@ -6,7 +6,7 @@ type Filter struct {
 	Eq             []Pair           `json:"eq,omitempty"`               // Equality pairs
 	Ne             []Pair           `json:"ne,omitempty"`               // Not equality pairs
 	Lk             []Pair           `json:"lk,omitempty"`               // Like pairs
-	Or             []Pair           `json:"or,omitempty"`               // Or pairs
+	Or             [][]Pair         `json:"or,omitempty"`               // Or pairs
 	In             []MultiFieldPair `json:"in,omitempty"`               // In column pair.
 	NotIn          []MultiFieldPair `json:"not_in,omitempty"`           // Not In column pair
 	Between        []MultiFieldPair `json:"between,omitempty"`          // Between column pair

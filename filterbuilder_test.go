@@ -32,13 +32,22 @@ func TestOr(t *testing.T) {
 		[]Pair{
 			{Column: "first_name", Value: Value{Src: "Zaldy", Raw: true}},
 			{Column: "last_name", Value: Value{Src: "Baguinon", Raw: true}},
-		}, true, "@p")
+		}, true, "$")
 
 	fb.Ne = append(fb.Ne, Pair{Column: "first_name", Value: Value{Src: "James", Raw: true}})
 	fb.Ne = append(fb.Ne, Pair{Column: "last_name", Value: Value{Src: "Lumibao", Raw: true}})
-	fb.Or = append(fb.Or, Pair{Column: "[nick_name]", Value: Value{Src: "James", Raw: true}})
-	fb.Or = append(fb.Or, Pair{Column: "[maiden_name]", Value: Value{Src: "Garcia", Raw: true}})
-	fb.Or = append(fb.Or, Pair{Column: "''", Value: Value{Src: "222", Raw: true}})
+
+	or1 := []Pair{
+		{Column: "[nick_name]", Value: Value{Src: "James", Raw: true}},
+		{Column: "[maiden_name]", Value: Value{Src: "Garcia", Raw: true}},
+	}
+
+	or2 := []Pair{
+		{Column: "''", Value: Value{Src: "222", Raw: true}},
+		{Column: "[user_name]", Value: Value{Src: "minium", Raw: true}},
+	}
+	fb.Or = append(fb.Or, or1)
+	fb.Or = append(fb.Or, or2)
 
 	sql, args, err := fb.Build()
 	if err != nil {
