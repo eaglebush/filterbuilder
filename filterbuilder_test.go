@@ -278,3 +278,65 @@ func TestValueForPtr(t *testing.T) {
 	}
 	t.Log(res2)
 }
+
+func TestMakeKey(t *testing.T) {
+	fb := NewFilter(
+		[]Pair{
+			{Column: "first_name", Value: Value{Src: "Zaldy", Raw: true}},
+			{Column: "last_name", Value: Value{Src: "Baguinon", Raw: true}},
+		}, true, "@p")
+
+	fb.Ne = append(fb.Ne, Pair{Column: "first_name", Value: Value{Src: "James", Raw: true}})
+	fb.Ne = append(fb.Ne, Pair{Column: "last_name", Value: Value{Src: "Lumibao", Raw: true}})
+	fb.Lk = append(fb.Lk, Pair{Column: "middle_name", Value: Value{Src: "Garcia", Raw: true}})
+	fb.In = append(fb.In,
+		MultiFieldPair{
+			Column: "stooge",
+			Value: []Value{
+				{Src: "Larry", Raw: true},
+				{Src: "Curly", Raw: true},
+				{Src: "Moe", Raw: true},
+			},
+		})
+	fb.NotIn = append(fb.NotIn,
+		MultiFieldPair{
+			Column: "nick_name",
+			Value: []Value{
+				{Src: "Tito", Raw: true},
+				{Src: "Vic", Raw: true},
+				{Src: "Joey", Raw: true},
+			},
+		})
+	t.Log(fb.MakeKey())
+}
+
+func TestHash(t *testing.T) {
+	fb := NewFilter(
+		[]Pair{
+			{Column: "first_name", Value: Value{Src: "Zaldy", Raw: true}},
+			{Column: "last_name", Value: Value{Src: "Baguinon", Raw: true}},
+		}, true, "@p")
+
+	fb.Ne = append(fb.Ne, Pair{Column: "first_name", Value: Value{Src: "James", Raw: true}})
+	fb.Ne = append(fb.Ne, Pair{Column: "last_name", Value: Value{Src: "Lumibao", Raw: true}})
+	fb.Lk = append(fb.Lk, Pair{Column: "middle_name", Value: Value{Src: "Garcia", Raw: true}})
+	fb.In = append(fb.In,
+		MultiFieldPair{
+			Column: "stooge",
+			Value: []Value{
+				{Src: "Larry", Raw: true},
+				{Src: "Curly", Raw: true},
+				{Src: "Moe", Raw: true},
+			},
+		})
+	fb.NotIn = append(fb.NotIn,
+		MultiFieldPair{
+			Column: "nick_name",
+			Value: []Value{
+				{Src: "Tito", Raw: true},
+				{Src: "Vic", Raw: true},
+				{Src: "Joey", Raw: true},
+			},
+		})
+	t.Log(fb.Hash())
+}

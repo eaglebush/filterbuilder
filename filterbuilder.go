@@ -1,6 +1,7 @@
 package filterbuilder
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"reflect"
@@ -45,7 +46,7 @@ func NewFilter(eq []Pair, paramInSequence bool, paramPlaceHolder string) *Filter
 
 // RawPair simplifies raw pair.
 // Pairs reads the value argument raw.
-func RawPair(column string, value interface{}) Pair {
+func RawPair(column string, value any) Pair {
 	return Pair{
 		Column: column,
 		Value: Value{
@@ -57,7 +58,7 @@ func RawPair(column string, value interface{}) Pair {
 
 // RawMultiPair simplifies raw multi-pair.
 // Pairs reads the value argument raw.
-func RawMultiPair(column string, value ...interface{}) MultiFieldPair {
+func RawMultiPair(column string, value ...any) MultiFieldPair {
 	v := make([]Value, 0, len(value))
 	for _, a := range value {
 		v = append(v, Value{
@@ -166,7 +167,7 @@ func SetMultiPair(selector *[]MultiFieldPair, column string, value []Value) {
 }
 
 // BuildFunc is a builder compatible with QueryBuilder's FilterFunc
-func (fb *Filter) BuildFunc(poff int, pchar string, pseq bool) ([]string, []interface{}) {
+func (fb *Filter) BuildFunc(poff int, pchar string, pseq bool) ([]string, []any) {
 	fb.Offset = poff
 	fb.Placeholder = pchar
 	fb.InSequence = pseq
@@ -175,14 +176,14 @@ func (fb *Filter) BuildFunc(poff int, pchar string, pseq bool) ([]string, []inte
 }
 
 // Build the filter query
-func (fb *Filter) Build() ([]string, []interface{}, error) {
+func (fb *Filter) Build() ([]string, []any, error) {
 
 	var (
 		sql  []string
-		args []interface{}
+		args []any
 		err  error
-		v    interface{}
-		vs   []interface{}
+		v    any
+		vs   []any
 	)
 
 	if fb.Placeholder == "" {
@@ -194,7 +195,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	}
 
 	sql = make([]string, 0)
-	args = make([]interface{}, 0)
+	args = make([]any, 0)
 
 	if len(fb.In) == 0 &&
 		len(fb.NotIn) == 0 &&
@@ -310,8 +311,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 	}
 
 	var (
-		cma  string
-		prms string
+		cma, prms string
 	)
 
 	// Get In filters
@@ -398,7 +398,7 @@ func (fb *Filter) Build() ([]string, []interface{}, error) {
 }
 
 // ValueFor gets the value of the filter instance by column lookup
-func (fb *Filter) ValueFor(col string) (interface{}, error) {
+func (fb *Filter) ValueFor(col string) (any, error) {
 	for _, v := range fb.Eq {
 		if strings.EqualFold(v.Column, col) {
 			return fb.Value(v.Value)
@@ -446,7 +446,7 @@ func ValueFor[T FieldTypeConstraint](fb *Filter, col string) (T, error) {
 		return *new(T), err
 	}
 	// get value thru reflect
-	var vx interface{}
+	var vx any
 	t := reflect.ValueOf(ifc)
 	if t.Kind() == reflect.Ptr {
 		if fx := t.Elem(); !fx.IsValid() {
@@ -464,7 +464,7 @@ func ValueFor[T FieldTypeConstraint](fb *Filter, col string) (T, error) {
 }
 
 // Weld joins an existing SQL string and its arguments with the results from the Build function
-func (fb *Filter) Weld(sql string, args []interface{}, paramoffset int) (string, []interface{}, error) {
+func (fb *Filter) Weld(sql string, args []any, paramoffset int) (string, []any, error) {
 	fb.Offset = paramoffset
 	fexp, fargs, err := fb.Build()
 	if err != nil {
@@ -483,7 +483,7 @@ func (fb *Filter) Weld(sql string, args []interface{}, paramoffset int) (string,
 }
 
 // Value gets the actual value of the struct field or the raw value that has been set
-func (fb *Filter) Value(p Value) (interface{}, error) {
+func (fb *Filter) Value(p Value) (any, error) {
 	if p.Raw {
 		if p.Src == nil {
 			return Null(true), nil
@@ -514,7 +514,7 @@ func (fb *Filter) Value(p Value) (interface{}, error) {
 		return strings.EqualFold(fld, s)
 	})
 
-	var vx interface{}
+	var vx any
 	if f.Kind() == reflect.Ptr {
 		if fx := f.Elem(); !fx.IsValid() {
 			return nil, nil
@@ -537,13 +537,255 @@ func (fb *Filter) Valid() bool {
 		len(fb.Between) > 0
 }
 
-func (fb *Filter) getMultiPairValue(p []Value) ([]interface{}, error) {
+// MakeKey creates a unique key out of the filters created
+func (fb *Filter) MakeKey() string {
+	sb := strings.Builder{}
+	for _, v := range fb.Eq {
+		if sb.Len() > 0 {
+			sb.WriteString("-")
+		}
+		sb.WriteString(sanitizeColumnForHash(v.Column))
+		sb.WriteString("=")
+		val, _ := fb.Value(v.Value)
+		sb.WriteString("\"" + sanitizeValueForHash(anyToString(val)) + "\"")
+	}
+	for _, vfs := range fb.Or {
+		for _, v := range vfs {
+			if sb.Len() > 0 {
+				sb.WriteString("-")
+			}
+			sb.WriteString(sanitizeColumnForHash(v.Column))
+			sb.WriteString("=")
+			val, _ := fb.Value(v.Value)
+			sb.WriteString("\"" + sanitizeValueForHash(anyToString(val)) + "\"")
+		}
+	}
+	for _, v := range fb.Ne {
+		if sb.Len() > 0 {
+			sb.WriteString("-")
+		}
+		sb.WriteString(sanitizeColumnForHash(v.Column))
+		sb.WriteString("=!")
+		val, _ := fb.Value(v.Value)
+		sb.WriteString("\"" + sanitizeValueForHash(anyToString(val)) + "\"")
+	}
+	for _, v := range fb.Lk {
+		if sb.Len() > 0 {
+			sb.WriteString("-")
+		}
+		sb.WriteString(sanitizeColumnForHash(v.Column))
+		sb.WriteString("=%\"")
+		val, _ := fb.Value(v.Value)
+		sb.WriteString(sanitizeValueForHash(anyToString(val)))
+		sb.WriteString("\"")
+	}
+	for _, v := range fb.In {
+		if sb.Len() > 0 {
+			sb.WriteString("-")
+		}
+		sb.WriteString(sanitizeColumnForHash(v.Column))
+		sb.WriteString("=|\"")
+		vals, _ := fb.getMultiPairValue(v.Value)
+		for i, val := range vals {
+			sb.WriteString(sanitizeValueForHash(anyToString(val)))
+			if i < len(vals)-1 {
+				sb.WriteString(",")
+			}
+		}
+		sb.WriteString("\"")
+	}
+	for _, v := range fb.NotIn {
+		if sb.Len() > 0 {
+			sb.WriteString("-")
+		}
+		sb.WriteString(sanitizeColumnForHash(v.Column))
+		sb.WriteString("=!|\"")
+		vals, _ := fb.getMultiPairValue(v.Value)
+		for i, val := range vals {
+			sb.WriteString(sanitizeValueForHash(anyToString(val)))
+			if i < len(vals)-1 {
+				sb.WriteString(",")
+			}
+		}
+		sb.WriteString("\"")
+	}
+	for _, v := range fb.Between {
+		if sb.Len() > 0 {
+			sb.WriteString("-")
+		}
+		sb.WriteString(sanitizeColumnForHash(v.Column))
+		sb.WriteString("=+\"")
+		vals, _ := fb.getMultiPairValue(v.Value)
+		for i, val := range vals {
+			sb.WriteString(sanitizeValueForHash(anyToString(val)))
+			if i < len(vals)-1 {
+				sb.WriteString(",")
+			}
+		}
+		sb.WriteString("\"")
+	}
+	return sb.String()
+}
+
+// Hash creates a hash of the filters created
+func (fb *Filter) Hash() string {
+	hasher := sha256.New()
+	key := fb.MakeKey()
+	hasher.Write([]byte(key))
+	hashBytes := hasher.Sum(nil)
+	return fmt.Sprintf("%x", hashBytes)
+}
+
+func sanitizeColumnForHash(col string) string {
+	if col == "" {
+		return ""
+	}
+	col = strings.TrimSpace(col)
+	col = strings.ReplaceAll(col, " ", "")
+	col = strings.ReplaceAll(col, "[", "")
+	col = strings.ReplaceAll(col, "]", "")
+	col = strings.ReplaceAll(col, "_", "-")
+	col = strings.ToLower(col)
+	return col
+}
+
+func sanitizeValueForHash(col string) string {
+	if col == "" {
+		return ""
+	}
+	col = strings.TrimSpace(col)
+	col = strings.ReplaceAll(col, " ", "")
+	return col
+}
+
+func anyToString(value any) string {
+	var b string
+	if value == nil {
+		return ""
+	}
+	switch t := value.(type) {
+	case string:
+		b = t
+	case int:
+		b = strconv.FormatInt(int64(t), 10)
+	case int8:
+		b = strconv.FormatInt(int64(t), 10)
+	case int16:
+		b = strconv.FormatInt(int64(t), 10)
+	case int32:
+		b = strconv.FormatInt(int64(t), 10)
+	case int64:
+		b = strconv.FormatInt(t, 10)
+	case uint:
+		b = strconv.FormatUint(uint64(t), 10)
+	case uint8:
+		b = strconv.FormatUint(uint64(t), 10)
+	case uint16:
+		b = strconv.FormatUint(uint64(t), 10)
+	case uint32:
+		b = strconv.FormatUint(uint64(t), 10)
+	case uint64:
+		b = strconv.FormatUint(uint64(t), 10)
+	case float32:
+		b = fmt.Sprintf("%f", t)
+	case float64:
+		b = fmt.Sprintf("%f", t)
+	case bool:
+		if t {
+			return "true"
+		} else {
+			return "false"
+		}
+	case time.Time:
+		b = "'" + t.Format(time.RFC3339) + "'"
+	case *string:
+		if t == nil {
+			return ""
+		}
+		b = *t
+	case *int:
+		if t == nil {
+			return "0"
+		}
+		b = strconv.FormatInt(int64(*t), 10)
+	case *int8:
+		if t == nil {
+			return "0"
+		}
+		b = strconv.FormatInt(int64(*t), 10)
+	case *int16:
+		if t == nil {
+			return "0"
+		}
+		b = strconv.FormatInt(int64(*t), 10)
+	case *int32:
+		if t == nil {
+			return "0"
+		}
+		b = strconv.FormatInt(int64(*t), 10)
+	case *int64:
+		if t == nil {
+			return "0"
+		}
+		b = strconv.FormatInt(*t, 10)
+	case *uint:
+		if t == nil {
+			return "0"
+		}
+		b = strconv.FormatUint(uint64(*t), 10)
+	case *uint8:
+		if t == nil {
+			return "0"
+		}
+		b = strconv.FormatUint(uint64(*t), 10)
+	case *uint16:
+		if t == nil {
+			return "0"
+		}
+		b = strconv.FormatUint(uint64(*t), 10)
+	case *uint32:
+		if t == nil {
+			return "0"
+		}
+		b = strconv.FormatUint(uint64(*t), 10)
+	case *uint64:
+		if t == nil {
+			return "0"
+		}
+		b = strconv.FormatUint(uint64(*t), 10)
+	case *float32:
+		if t == nil {
+			return "0"
+		}
+		b = fmt.Sprintf("%f", *t)
+	case *float64:
+		if t == nil {
+			return "0"
+		}
+		b = fmt.Sprintf("%f", *t)
+	case *bool:
+		if t == nil || !*t {
+			return "false"
+		}
+		return "true"
+	case *time.Time:
+		if t == nil {
+			return "'" + time.Time{}.Format(time.RFC3339) + "'"
+		}
+		tm := *t
+		b = "'" + tm.Format(time.RFC3339) + "'"
+	}
+
+	return b
+}
+
+func (fb *Filter) getMultiPairValue(p []Value) ([]any, error) {
 	var (
 		err  error
-		args []interface{}
-		v    interface{}
+		args []any
+		v    any
 	)
-	args = make([]interface{}, 0)
+	args = make([]any, 0)
 	for _, mv := range p {
 		v, err = fb.Value(mv)
 		if err != nil {

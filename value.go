@@ -5,8 +5,8 @@ type Null bool
 
 // Value struct
 type Value struct {
-	Src interface{} `json:"src,omitempty"` // Struct field to get value or the value itself
-	Raw bool        `json:"raw,omitempty"` // When true, the Src was set to a raw value. When false, the value is retrieved from the struct field in the Data.
+	Src any  `json:"src,omitempty"` // Struct field to get value or the value itself
+	Raw bool `json:"raw,omitempty"` // When true, the Src was set to a raw value. When false, the value is retrieved from the struct field in the Data.
 }
 
 // Pair struct
