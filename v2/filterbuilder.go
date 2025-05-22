@@ -8,9 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	ssd "github.com/shopspring/decimal"
-	"golang.org/x/exp/constraints"
 )
 
 var (
@@ -27,18 +24,6 @@ var (
 )
 
 type (
-	FieldTypeConstraint interface {
-		constraints.Ordered | time.Time | ssd.Decimal | bool
-	}
-
-	// // Filter option data
-	// fod struct {
-	// 	ph    string
-	// 	inSeq bool
-	// 	off   int
-	// 	nof   bool
-	// }
-
 	FilterOption func(*Filter)
 )
 
@@ -290,7 +275,7 @@ func (fb *Filter) ValueFor(col string) (any, error) {
 }
 
 // ValueFor is a static way to get the value of the filter by column lookup
-func ValueFor[T FieldTypeConstraint](fb *Filter, col string) (T, error) {
+func ValueFor[T any](fb *Filter, col string) (T, error) {
 	ifc, err := fb.ValueFor(col)
 	if err != nil {
 		return *new(T), err
