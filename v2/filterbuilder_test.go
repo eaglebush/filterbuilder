@@ -337,6 +337,9 @@ func TestValueForPtr(t *testing.T) {
 		{Column: "last_name", Value: Value{Src: "Baguinon", Raw: true}},
 		{Column: "age", Value: Value{Src: &age, Raw: true}},
 	}
+	fb.In = []In{
+		InRawPair("status", "NEW", "STALE", "OLD"),
+	}
 
 	res1, err := ValueFor[string](fb, "last_name")
 	if err != nil {
@@ -349,6 +352,12 @@ func TestValueForPtr(t *testing.T) {
 		t.Log(err.Error())
 	}
 	t.Log(res2)
+
+	res3, err := ValueFor[[]string](fb, "status")
+	if err != nil {
+		t.Log(err.Error())
+	}
+	t.Log(res3)
 }
 
 func TestMakeKey(t *testing.T) {

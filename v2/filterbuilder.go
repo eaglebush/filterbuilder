@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	ssd "github.com/shopspring/decimal"
 )
 
 var (
@@ -24,7 +26,14 @@ var (
 )
 
 type (
-	FilterOption func(*Filter)
+	FilterOption      func(*Filter)
+	FilterConstraints interface {
+		~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 |
+			~uint32 | ~uint64 | ~uintptr | ~float32 | ~float64 | ~string |
+			~[]int | ~[]int8 | ~[]int16 | ~[]int32 | ~[]int64 | ~[]uint | ~[]uint8 | ~[]uint16 |
+			~[]uint32 | ~[]uint64 | ~[]uintptr | ~[]float32 | ~[]float64 | ~[]string |
+			time.Time | ssd.Decimal | bool | []time.Time | []ssd.Decimal | []bool
+	}
 )
 
 // New creates a new Filter object
@@ -275,7 +284,7 @@ func (fb *Filter) ValueFor(col string) (any, error) {
 }
 
 // ValueFor is a static way to get the value of the filter by column lookup
-func ValueFor[T any](fb *Filter, col string) (T, error) {
+func ValueFor[T FilterConstraints](fb *Filter, col string) (T, error) {
 	ifc, err := fb.ValueFor(col)
 	if err != nil {
 		return *new(T), err
@@ -288,6 +297,19 @@ func ValueFor[T any](fb *Filter, col string) (T, error) {
 			return *new(T), ErrTypeReflectionInvalid
 		}
 		vx = t.Elem().Interface()
+	} else if t.Kind() == reflect.Slice {
+		tType := reflect.TypeOf((*T)(nil)).Elem()
+		toS := tType.Elem()
+		vy := reflect.MakeSlice(tType, t.Len(), t.Len())
+		for i := range t.Len() {
+			item := t.Index(i).Interface()
+			val := reflect.ValueOf(item)
+			if !val.Type().AssignableTo(toS) {
+				panic(fmt.Sprintf("element %d is not assignable to %s", i, toS))
+			}
+			vy.Index(i).Set(val)
+		}
+		vx = vy.Interface()
 	} else {
 		vx = t.Interface()
 		switch vx.(type) {
