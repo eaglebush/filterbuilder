@@ -67,26 +67,48 @@ func TestNewFunc(t *testing.T) {
 }
 
 func TestOr2(t *testing.T) {
-	fb := New(InSequence(true), Placeholder("@p"))
-	or3 := Or{
-		Pair: []Filterer{
-			Group{
-				And: []Filterer{
-					EqRawPair("a.user_name", "James"),
-					GtRawPair("a.doorid", "02517-229"),
-				},
-			},
-			Group{
-				And: []Filterer{
-					EqRawPair("ISNULL(a.task_id,'')", "Store Visit"),
-					GtRawPair("b.status", 54),
+
+	fltr := Filter{
+		Or: []Or{
+			{
+				[]Filterer{
+					Group{
+						And: []Filterer{
+							EqRawPair("a.user_name", "James"),
+							GtRawPair("a.doorid", "02517-229"),
+						},
+					},
+					Group{
+						And: []Filterer{
+							EqRawPair("ISNULL(a.task_id,'')", "Store Visit"),
+							GtRawPair("b.status", 54),
+						},
+					},
 				},
 			},
 		},
 	}
-	fb.Or = append(fb.Or, or3)
 
-	sql, args, err := fb.Build()
+	// fltr := New(InSequence(true), Placeholder("@p"))
+	// or3 := Or{
+	// 	Pair: []Filterer{
+	// 		Group{
+	// 			And: []Filterer{
+	// 				EqRawPair("a.user_name", "James"),
+	// 				GtRawPair("a.doorid", "02517-229"),
+	// 			},
+	// 		},
+	// 		Group{
+	// 			And: []Filterer{
+	// 				EqRawPair("ISNULL(a.task_id,'')", "Store Visit"),
+	// 				GtRawPair("b.status", 54),
+	// 			},
+	// 		},
+	// 	},
+	// }
+	// fltr.Or = append(fltr.Or, or3)
+
+	sql, args, err := fltr.Build()
 	if err != nil {
 		t.Logf("Error: %s", err)
 		t.Fail()
