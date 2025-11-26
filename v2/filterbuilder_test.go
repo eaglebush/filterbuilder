@@ -139,6 +139,7 @@ func TestOr(t *testing.T) {
 		t.Logf("Error: %s", err)
 		t.Fail()
 	}
+	t.Log(sql)
 
 	for _, s := range sql {
 		t.Log(s)
