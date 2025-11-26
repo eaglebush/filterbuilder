@@ -66,6 +66,42 @@ func TestNewFunc(t *testing.T) {
 	}
 }
 
+func TestOr2(t *testing.T) {
+	fb := New(InSequence(true), Placeholder("@p"))
+	or3 := Or{
+		Pair: []Filterer{
+			Group{
+				And: []Filterer{
+					EqRawPair("a.user_name", "James"),
+					GtRawPair("a.doorid", "02517-229"),
+				},
+			},
+			Group{
+				And: []Filterer{
+					EqRawPair("ISNULL(a.task_id,'')", "Store Visit"),
+					GtRawPair("b.status", 54),
+				},
+			},
+		},
+	}
+	fb.Or = append(fb.Or, or3)
+
+	sql, args, err := fb.Build()
+	if err != nil {
+		t.Logf("Error: %s", err)
+		t.Fail()
+	}
+	t.Log(sql)
+
+	for _, s := range sql {
+		t.Log(s)
+	}
+
+	for i, a := range args {
+		t.Logf("%d: %v", i+1, a)
+	}
+}
+
 func TestOr(t *testing.T) {
 
 	fb := New(InSequence(true), Placeholder("@p"))
@@ -105,6 +141,23 @@ func TestOr(t *testing.T) {
 		},
 	}
 
+	or3 := Or{
+		Pair: []Filterer{
+			Group{
+				And: []Filterer{
+					EqRawPair("user_name", "sample"),
+					GtRawPair("age", 34),
+				},
+			},
+			Group{
+				And: []Filterer{
+					EqRawPair("user_name", "sample2"),
+					GtRawPair("age", 54),
+				},
+			},
+		},
+	}
+
 	// Or condition 3
 	// or3 := Or{
 	// 	Pair: []Filterer{
@@ -131,7 +184,7 @@ func TestOr(t *testing.T) {
 
 	fb.Or = append(fb.Or, or1)
 	fb.Or = append(fb.Or, or2)
-	//fb.Or = append(fb.Or, or3)
+	fb.Or = append(fb.Or, or3)
 	fb.Or = append(fb.Or, or4)
 
 	sql, args, err := fb.Build()

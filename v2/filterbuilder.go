@@ -122,6 +122,10 @@ func (fb *Filter) Build() ([]string, []any, error) {
 		len(fb.Or) == 0 &&
 		len(fb.Lk) == 0 &&
 		len(fb.Between) == 0 &&
+		len(fb.Lt) == 0 &&
+		len(fb.Lte) == 0 &&
+		len(fb.Gt) == 0 &&
+		len(fb.Gte) == 0 &&
 		!fb.AllowNoFilters {
 		return sql, args, ErrNoFilterSet
 	}
@@ -135,6 +139,50 @@ func (fb *Filter) Build() ([]string, []any, error) {
 
 	// Get Equality filters
 	for _, sv := range fb.Eq {
+		str, rv, fb.Offset, err = sv.Build(fb.Data, fb.Placeholder, fb.InSequence, fb.Offset)
+		if err != nil {
+			return sql, args, err
+		}
+		if rv != nil {
+			args = append(args, rv)
+		}
+		sql = append(sql, str)
+	}
+
+	for _, sv := range fb.Lt {
+		str, rv, fb.Offset, err = sv.Build(fb.Data, fb.Placeholder, fb.InSequence, fb.Offset)
+		if err != nil {
+			return sql, args, err
+		}
+		if rv != nil {
+			args = append(args, rv)
+		}
+		sql = append(sql, str)
+	}
+
+	for _, sv := range fb.Lte {
+		str, rv, fb.Offset, err = sv.Build(fb.Data, fb.Placeholder, fb.InSequence, fb.Offset)
+		if err != nil {
+			return sql, args, err
+		}
+		if rv != nil {
+			args = append(args, rv)
+		}
+		sql = append(sql, str)
+	}
+
+	for _, sv := range fb.Gt {
+		str, rv, fb.Offset, err = sv.Build(fb.Data, fb.Placeholder, fb.InSequence, fb.Offset)
+		if err != nil {
+			return sql, args, err
+		}
+		if rv != nil {
+			args = append(args, rv)
+		}
+		sql = append(sql, str)
+	}
+
+	for _, sv := range fb.Gte {
 		str, rv, fb.Offset, err = sv.Build(fb.Data, fb.Placeholder, fb.InSequence, fb.Offset)
 		if err != nil {
 			return sql, args, err
