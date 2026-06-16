@@ -13,7 +13,7 @@ type Filterer interface {
 
 // Filter - the filter struct
 type Filter struct {
-	Data           any     `json:"data,omitempty"`
+	Data           any     `json:"data,omitempty"`             // A struct to get the value of the filter. The value is retrieved by the struct field name. It will be enabled by Raw: false in Value
 	Eq             []Eq    `json:"eq,omitempty"`               // Equality pairs
 	Lt             []Lt    `json:"lt,omitempty"`               // Less than pairs
 	Lte            []Lte   `json:"lte,omitempty"`              // Less than equal pairs
@@ -124,7 +124,7 @@ func buildRangePair(f Filterer, srcData any, ph string, inSeq bool, offset int) 
 		return qry, args, offset, ErrPairTypeMustBeTwo
 	}
 
-	qry = col + " BETWEEN "
+	qry = col + " BETWEEN"
 	for _, pr := range val {
 		v, err = getFilterValue(srcData, pr)
 		if err != nil {
@@ -144,7 +144,7 @@ func buildRangePair(f Filterer, srcData any, ph string, inSeq bool, offset int) 
 			qry += strconv.Itoa(offset)
 		}
 		args = append(args, v)
-		cma = " AND "
+		cma = " AND"
 	}
 
 	return qry, args, offset, nil

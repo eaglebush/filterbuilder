@@ -2,6 +2,7 @@ package filterbuilder
 
 import (
 	"testing"
+	"time"
 )
 
 func TestNew(t *testing.T) {
@@ -107,6 +108,31 @@ func TestOr2(t *testing.T) {
 	// 	},
 	// }
 	// fltr.Or = append(fltr.Or, or3)
+
+	sql, args, err := fltr.Build()
+	if err != nil {
+		t.Logf("Error: %s", err)
+		t.Fail()
+	}
+	t.Log(sql)
+
+	for _, s := range sql {
+		t.Log(s)
+	}
+
+	for i, a := range args {
+		t.Logf("%d: %v", i+1, a)
+	}
+}
+
+func TestBw(t *testing.T) {
+
+	fltr := Filter{
+		Between: []Bw{
+			BwRawPair("user_key", 2517, 2518),
+			BwRawPair("created_at", time.Date(2026, 6, 16, 0, 0, 0, 0, &time.Location{}), time.Date(2026, 6, 17, 0, 0, 0, 0, &time.Location{})),
+		},
+	}
 
 	sql, args, err := fltr.Build()
 	if err != nil {
